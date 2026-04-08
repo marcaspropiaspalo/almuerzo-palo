@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedido almuerzo PALO</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .card { background: white; border-radius: 12px; padding: 24px; max-width: 560px; margin: 0 auto; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    h1 { color: #2D6A4F; font-size: 22px; margin-bottom: 4px; }
+    .subtitulo { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .campo { margin-bottom: 16px; }
+    label { display: block; font-weight: bold; font-size: 13px; color: #333; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+    .categoria { margin-bottom: 20px; }
+    .categoria h3 { font-size: 13px; text-transform: uppercase; color: #2D6A4F; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 2px solid #D8F3DC; padding-bottom: 6px; }
+    .opcion { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+    .opcion:hover { border-color: #2D6A4F; background: #f0faf4; }
+    .opcion.seleccionado { border-color: #2D6A4F; background: #D8F3DC; }
+    .opcion.sin-cupo { opacity: 0.4; cursor: not-allowed; }
+    .nombre-plato { font-size: 14px; }
+    .cupos { font-size: 12px; color: #999; }
+    .cupos.bajo { color: #e07b00; font-weight: bold; }
+    .acomp-section { background: #f9f9f9; border-radius: 8px; padding: 14px; margin-top: 8px; margin-bottom: 16px; }
+    .acomp-section label { color: #2D6A4F; }
+    .btn { width: 100%; padding: 14px; background: #2D6A4F; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    .btn:hover { background: #1B4332; }
+    .btn:disabled { background: #aaa; cursor: not-allowed; }
+    .msg { padding: 14px; border-radius: 8px; margin-top: 16px; font-size: 14px; text-align: center; }
+    .msg.error { background: #fde8e8; color: #b91c1c; }
+    .flex-badge { font-size: 11px; background: #2D6A4F; color: white; padding: 2px 7px; border-radius: 10px; margin-left: 8px; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Pedido almuerzo PALO</h1>
+  <p class="subtitulo" id="subtitulo">Cargando menu...</p>
+  <div class="campo">
+    <label>Tu nombre</label>
+    <input type="text" id="nombre" placeholder="Ej: Juan Perez" />
+  </div>
+  <div class="campo">
+    <label>Tu email</label>
+    <input type="email" id="email" placeholder="tu@somospalo.com" />
+  </div>
+  <div id="menu"><div class="loading">Cargando menu del dia...</div></div>
+  <div id="msg"></div>
+  <button class="btn" id="btnEnviar" onclick="enviarPedido()" disabled>Confirmar pedido</button>
+</div>
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPu_1wYNIeztCk1ySIiiD52lzvYc6g9vjeORWfwd1W38ZAwZOYWdu3JxXnHpmxpwVr/exec';
+  const FLEX_CATS = ['Desayunos','Entradas','Tostados','Yogurs & Snacks Saludables','Entraditas','Onigiris'];
+  let categorias = [];
+  let acompMap = {};
+  let seleccionados = [];
+
+  function cargarMenu() {
+  const script = document.createElement('script');
+  script.src = SCRIPT_URL + '?action=getDatosEmpleados&callback=recibirDatos';
+  document.body.appendChild(script);
+}
+
+function recibirDatos(datos) {
+  categorias = datos.categorias;
+  acompMap = datos.acompMap;
+  document.getElementById('subtitulo').innerHTML = 'Palitos, hoy pedimos a <strong>' + (datos.local || 'Sin local asignado') + '</strong>';
+  renderMenu();
+  document.getElementById('btnEnviar').disabled = false;
+}
+
+cargarMenu();
+
+  function renderMenu() {
+    const container = document.getElementById('menu');
+    container.innerHTML = '';
+    for (const cat of categorias) {
+      const esFlex = FLEX_CATS.includes(cat.nombre);
+      const div = document.createElement('div');
+      div.className = 'categoria';
+      div.innerHTML = '<h3>' + cat.nombre + (esFlex ? '<span class="flex-badge">hasta 2</span>' : '') + '</h3>';
+      for (const p of cat.platos) {
+        const sinCupo = p.cupos <= 0;
+        const opcion = document.createElement('div');
+        opcion.className = 'opcion' + (sinCupo ? ' sin-cupo' : '');
+        opcion.dataset.plato = p.plato;
+        opcion.dataset.cat = cat.nombre;
+        opcion.dataset.tipo = p.tipo;
+        opcion.dataset.acomp = p.tieneAcomp;
+        const cuposTxt = sinCupo ? 'Sin cupos' : (p.cupos <= 2 ? 'Ultimos ' + p.cupos + ' cupos' : p.cupos + ' cupos');
+        const cuposClass = p.cupos <= 2 && !sinCupo ? 'bajo' : '';
+        opcion.innerHTML = '<span class="nombre-plato">' + p.plato + '</span><span class="cupos ' + cuposClass + '">' + cuposTxt + '</span>';
+        if (!sinCupo) opcion.onclick = () => toggleSeleccion(opcion);
+        div.appendChild(opcion);
+      }
+      container.appendChild(div);
+    }
+    renderAcomp();
+  }
+
+  function toggleSeleccion(opcion) {
+    const plato = opcion.dataset.plato;
+    const cat = opcion.dataset.cat;
+    const esFlex = FLEX_CATS.includes(cat);
+    const yaSeleccionado = opcion.classList.contains('seleccionado');
+    if (yaSeleccionado) {
+      opcion.classList.remove('seleccionado');
+      seleccionados = seleccionados.filter(s => s.plato !== plato);
+    } else {
+      const flexSel = seleccionados.filter(s => FLEX_CATS.includes(s.categoria));
+      const singleSel = seleccionados.filter(s => !FLEX_CATS.includes(s.categoria));
+      if (!esFlex && singleSel.length > 0) { mostrarMsg('Solo podes elegir 1 plato de las categorias principales.'); return; }
+      if (!esFlex && flexSel.length > 0) { mostrarMsg('Si eleges un plato principal no podes combinar con desayunos, entradas o tostados.'); return; }
+      if (esFlex && singleSel.length > 0) { mostrarMsg('Si eleges desayuno, entrada o tostado no podes combinar con platos principales.'); return; }
+      if (esFlex && flexSel.length >= 2) { mostrarMsg('Podes elegir maximo 2 items del grupo flex.'); return; }
+      opcion.classList.add('seleccionado');
+      seleccionados.push({ plato, categoria: cat, tipo: opcion.dataset.tipo, tieneAcomp: opcion.dataset.acomp === 'true' });
+    }
+    renderAcomp();
+  }
+
+  function renderAcomp() {
+    document.querySelectorAll('.acomp-section').forEach(e => e.remove());
+    for (const sel of seleccionados) {
+      if (!sel.tieneAcomp) continue;
+      const opciones = acompMap[sel.plato] || [];
+      if (!opciones.length) continue;
+      const div = document.createElement('div');
+      div.className = 'acomp-section';
+      let opts = opciones.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+      div.innerHTML = '<label>Acompañamiento para ' + sel.plato + '</label><select id="acomp_' + btoa(unescape(encodeURIComponent(sel.plato))) + '"><option value="">-- Elegi un acompañamiento --</option>' + opts + '</select>';
+      document.getElementById('menu').appendChild(div);
+    }
+  }
+
+  function mostrarMsg(texto) {
+    const msg = document.getElementById('msg');
+    msg.className = 'msg error';
+    msg.textContent = texto;
+    setTimeout(() => { msg.textContent = ''; msg.className = ''; }, 4000);
+  }
+
+  async function enviarPedido() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const email = document.getElementById('email').value.trim();
+    if (!nombre || !email) { mostrarMsg('Por favor completa tu nombre y email.'); return; }
+    if (!seleccionados.length) { mostrarMsg('Por favor elegi al menos un plato.'); return; }
+    const items = seleccionados.map(sel => {
+      const key = btoa(unescape(encodeURIComponent(sel.plato)));
+      const acompEl = document.getElementById('acomp_' + key);
+      return { plato: sel.plato, categoria: sel.categoria, tipo: sel.tipo, acompaniamiento: acompEl ? acompEl.value : '' };
+    });
+    for (const item of items) {
+      if (item.acompaniamiento === '' && acompMap[item.plato] && acompMap[item.plato].length > 0) {
+        mostrarMsg('Por favor elegi un acompañamiento para ' + item.plato); return;
+      }
+    }
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try {
+      const data = encodeURIComponent(JSON.stringify({ email, nombre, items }));
+      const res = await fetch(SCRIPT_URL + '?action=procesarPedido&data=' + data);
+      const result = await res.json();
+      if (result.ok) {
+        document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Pedido confirmado!</h2><p style="color:#666;margin-top:8px">Te enviamos un mail con el detalle.</p></div>';
+      } else {
+        mostrarMsg(result.mensaje);
+        btn.disabled = false;
+        btn.textContent = 'Confirmar pedido';
+      }
+    } catch(err) {
+      mostrarMsg('Error al enviar. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Confirmar pedido';
+    }
+  }
+</script>
+</body>
+</html>
