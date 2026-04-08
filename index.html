@@ -51,28 +51,27 @@
 </div>
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPu_1wYNIeztCk1ySIiiD52lzvYc6g9vjeORWfwd1W38ZAwZOYWdu3JxXnHpmxpwVr/exec';
+  const PROXY = 'https://api.allorigins.win/get?url=';
   const FLEX_CATS = ['Desayunos','Entradas','Tostados','Yogurs & Snacks Saludables','Entraditas','Onigiris'];
   let categorias = [];
   let acompMap = {};
   let seleccionados = [];
 
   function cargarMenu() {
-  const script = document.createElement('script');
-  script.src = SCRIPT_URL + '?action=getDatosEmpleados&callback=recibirDatos';
-  document.body.appendChild(script);
-}
-
-function recibirDatos(datos) {
-  categorias = datos.categorias;
-  acompMap = datos.acompMap;
-  document.getElementById('subtitulo').innerHTML = 'Palitos, hoy pedimos a <strong>' + (datos.local || 'Sin local asignado') + '</strong>';
-  renderMenu();
-  document.getElementById('btnEnviar').disabled = false;
-}
-
-cargarMenu();
-
-cargarMenu();
+    fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=getDatosEmpleados'))
+      .then(r => r.json())
+      .then(r => {
+        const datos = JSON.parse(r.contents);
+        categorias = datos.categorias;
+        acompMap = datos.acompMap;
+        document.getElementById('subtitulo').innerHTML = 'Palitos, hoy pedimos a <strong>' + (datos.local || 'Sin local asignado') + '</strong>';
+        renderMenu();
+        document.getElementById('btnEnviar').disabled = false;
+      })
+      .catch(() => {
+        document.getElementById('menu').innerHTML = '<p style="color:red">Error cargando el menu. Recarga la pagina.</p>';
+      });
+  }
 
   function renderMenu() {
     const container = document.getElementById('menu');
@@ -163,8 +162,9 @@ cargarMenu();
     btn.textContent = 'Enviando...';
     try {
       const data = encodeURIComponent(JSON.stringify({ email, nombre, items }));
-      const res = await (SCRIPT_URL + '?action=procesarPedido&data=' + data);
-      const result = await res.json();
+      const res = await fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=procesarPedido&data=' + data));
+      const r = await res.json();
+      const result = JSON.parse(r.contents);
       if (result.ok) {
         document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Pedido confirmado!</h2><p style="color:#666;margin-top:8px">Te enviamos un mail con el detalle.</p></div>';
       } else {
@@ -178,6 +178,8 @@ cargarMenu();
       btn.textContent = 'Confirmar pedido';
     }
   }
+
+  cargarMenu();
 </script>
 </body>
 </html>
