@@ -161,7 +161,7 @@
     btn.textContent = 'Enviando...';
     try {
       const data = encodeURIComponent(JSON.stringify({ email, nombre, items }));
-      const res = await fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=procesarPedido&data=' + data));
+      const res = await fetch(SCRIPT_URL + '?action=procesarPedido&data=' + data);
 const result = await res.json();
       if (result.ok) {
         document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Pedido confirmado!</h2><p style="color:#666;margin-top:8px">Te enviamos un mail con el detalle.</p></div>';
