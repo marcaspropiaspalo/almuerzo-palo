@@ -88,9 +88,7 @@
         opcion.dataset.cat = cat.nombre;
         opcion.dataset.tipo = p.tipo;
         opcion.dataset.acomp = p.tieneAcomp;
-        const cuposTxt = sinCupo ? 'Sin cupos' : (p.cupos <= 2 ? 'Ultimos ' + p.cupos + ' cupos' : p.cupos + ' cupos');
-        const cuposClass = p.cupos <= 2 && !sinCupo ? 'bajo' : '';
-        opcion.innerHTML = '<span class="nombre-plato">' + p.plato + '</span><span class="cupos ' + cuposClass + '">' + cuposTxt + '</span>';
+        opcion.innerHTML = '<span class="nombre-plato">' + p.plato + '</span>';
         if (!sinCupo) opcion.onclick = () => toggleSeleccion(opcion);
         div.appendChild(opcion);
       }
