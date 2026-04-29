@@ -41,10 +41,6 @@
     <label>Tu nombre</label>
     <input type="text" id="nombre" placeholder="Ej: Juan Perez" />
   </div>
-  <div class="campo">
-    <label>Tu email</label>
-    <input type="email" id="email" placeholder="tu@somospalo.com" />
-  </div>
   <div id="menu"><div class="loading">Cargando menu del dia...</div></div>
   <div id="msg"></div>
   <button class="btn" id="btnEnviar" onclick="enviarPedido()" disabled>Confirmar pedido</button>
@@ -140,41 +136,38 @@
   }
 
   async function enviarPedido() {
-    const nombre = document.getElementById('nombre').value.trim();
-    const email = document.getElementById('email').value.trim();
-    if (!nombre || !email) { mostrarMsg('Por favor completa tu nombre y email.'); return; }
-    if (!seleccionados.length) { mostrarMsg('Por favor elegi al menos un plato.'); return; }
-    const items = seleccionados.map(sel => {
-      const key = btoa(unescape(encodeURIComponent(sel.plato)));
-      const acompEl = document.getElementById('acomp_' + key);
-      return { plato: sel.plato, categoria: sel.categoria, tipo: sel.tipo, acompaniamiento: acompEl ? acompEl.value : '' };
-    });
-    for (const item of items) {
-      if (item.acompaniamiento === '' && acompMap[item.plato] && acompMap[item.plato].length > 0) {
-        mostrarMsg('Por favor elegi un acompañamiento para ' + item.plato); return;
-      }
+  const nombre = document.getElementById('nombre').value.trim();
+  if (!nombre) { mostrarMsg('Por favor completá tu nombre.'); return; }
+  if (!seleccionados.length) { mostrarMsg('Por favor elegí al menos un plato.'); return; }
+  const items = seleccionados.map(sel => {
+    const key = btoa(unescape(encodeURIComponent(sel.plato)));
+    const acompEl = document.getElementById('acomp_' + key);
+    return { plato: sel.plato, categoria: sel.categoria, tipo: sel.tipo, acompaniamiento: acompEl ? acompEl.value : '' };
+  });
+  for (const item of items) {
+    if (item.acompaniamiento === '' && acompMap[item.plato] && acompMap[item.plato].length > 0) {
+      mostrarMsg('Por favor elegí un acompañamiento para ' + item.plato); return;
     }
-    const btn = document.getElementById('btnEnviar');
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-    try {
-      const data = encodeURIComponent(JSON.stringify({ email, nombre, items }));
-      const res = await fetch(SCRIPT_URL + '?action=procesarPedido&data=' + data);
-const result = await res.json();
-      if (result.ok) {
-        document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Pedido confirmado!</h2><p style="color:#666;margin-top:8px">Te enviamos un mail con el detalle.</p></div>';
-      } else {
-        mostrarMsg(result.mensaje);
-        btn.disabled = false;
-        btn.textContent = 'Confirmar pedido';
-      }
-    } catch(err) {
-      mostrarMsg('Error al enviar. Intenta de nuevo.');
+  }
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  try {
+    const data = encodeURIComponent(JSON.stringify({ nombre, items }));
+    const res = await fetch(BASE_URL + '?action=procesarPedido&data=' + data);
+    const result = await res.json();
+    if (result.ok) {
+      document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Pedido confirmado!</h2></div>';
+    } else {
+      mostrarMsg(result.mensaje);
       btn.disabled = false;
       btn.textContent = 'Confirmar pedido';
     }
+  } catch(err) {
+    mostrarMsg('Error al enviar. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = 'Confirmar pedido';
   }
-
   cargarMenu();
 </script>
 </body>
