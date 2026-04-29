@@ -21,6 +21,7 @@
     .opcion.sin-cupo { opacity: 0.4; cursor: not-allowed; }
     .nombre-plato { font-size: 14px; }
     .desc-plato { font-size: 12px; color: #999; display: block; margin-top: 2px; }
+    .plato-info { display: flex; flex-direction: column; }
     .cupos { font-size: 12px; color: #999; }
     .cupos.bajo { color: #e07b00; font-weight: bold; }
     .acomp-section { background: #f9f9f9; border-radius: 8px; padding: 14px; margin-top: 8px; margin-bottom: 16px; }
@@ -85,8 +86,10 @@
         opcion.dataset.cat = cat.nombre;
         opcion.dataset.tipo = p.tipo;
         opcion.dataset.acomp = p.tieneAcomp;
-        opcion.innerHTML = '<span class="nombre-plato">' + p.plato + '</span>'
-  + (p.descripcion ? '<span class="desc-plato">' + p.descripcion + '</span>' : '');
+        opcion.innerHTML = '<div class="plato-info">'
+        + '<span class="nombre-plato">' + p.plato + '</span>'
+        + (p.descripcion ? '<span class="desc-plato">' + p.descripcion + '</span>' : '')
+        + '</div>';
         if (!sinCupo) opcion.onclick = () => toggleSeleccion(opcion);
         div.appendChild(opcion);
       }
