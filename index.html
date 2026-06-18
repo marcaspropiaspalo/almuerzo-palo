@@ -59,20 +59,24 @@
   let acompMap = {};
   let seleccionados = [];
 
-  function cargarMenu() {
-    fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=getDatosEmpleados'))
-  .then(r => r.json())
-  .then(datos => {
-    categorias = datos.categorias;
-    acompMap = datos.acompMap;
-    document.getElementById('subtitulo').innerHTML = 'Palitos, hoy pedimos a <strong>' + (datos.local || 'Sin local asignado') + '</strong>';
-    renderMenu();
-    document.getElementById('btnEnviar').disabled = false;
-  })
-  .catch(() => {
-    document.getElementById('menu').innerHTML = '<p style="color:red">Error cargando el menu. Recarga la pagina.</p>';
-  });
+function cargarMenu() {
+  fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=getDatosEmpleados'))
+.then(r => r.json())
+.then(datos => {
+  if (pedidosCerrados()) {
+    document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">⏰</div><h2 style="color:#B5451B;margin-top:16px">Pedidos cerrados</h2><p style="color:#666;margin-top:8px">Ups, los locales ya están procesando el pedido de almuerzo de Palo. Si querés sumar algo escribí a la mesa de marcas propias.</p></div>';
+    return;
   }
+  categorias = datos.categorias;
+  acompMap = datos.acompMap;
+  document.getElementById('subtitulo').innerHTML = 'Palitos, hoy pedimos a <strong>' + (datos.local || 'Sin local asignado') + '</strong>';
+  renderMenu();
+  document.getElementById('btnEnviar').disabled = false;
+})
+.catch(() => {
+  document.getElementById('menu').innerHTML = '<p style="color:red">Error cargando el menu. Recarga la pagina.</p>';
+});
+}
 
   function renderMenu() {
     const container = document.getElementById('menu');
@@ -136,7 +140,16 @@
       document.getElementById('menu').appendChild(div);
     }
   }
-
+function pedidosCerrados() {
+  const ahora = new Date();
+  const dia = ahora.getDay();
+  const hora = ahora.getHours();
+  const min = ahora.getMinutes();
+  if (dia === 2) return (hora > 10) || (hora === 10 && min >= 15);
+  if (dia === 3) return (hora > 10) || (hora === 10 && min >= 30);
+  return false;
+}
+  
   function mostrarMsg(texto) {
   const overlay = document.createElement('div');
   overlay.className = 'popup-overlay';
