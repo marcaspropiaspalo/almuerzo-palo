@@ -39,10 +39,9 @@
 </div>
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPu_1wYNIeztCk1ySIiiD52lzvYc6g9vjeORWfwd1W38ZAwZOYWdu3JxXnHpmxpwVr/exec';
-  const PROXY = 'https://corsproxy.io/?';
 
   function cargarDatos() {
-    fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=getDatosLocal'))
+    fetch(SCRIPT_URL + '?action=getDatosLocal')
       .then(r => r.json())
       .then(datos => {
         document.getElementById('subtitulo').innerHTML = '<strong>' + (datos.local || '') + '</strong> — Tilda los platos y acompañamientos que no tenes disponibles hoy';
@@ -98,7 +97,7 @@
 
     try {
       const data = encodeURIComponent(JSON.stringify(quiebres));
-      const res = await fetch(PROXY + encodeURIComponent(SCRIPT_URL + '?action=procesarQuiebres&data=' + data));
+      const res = await fetch(SCRIPT_URL + '?action=procesarQuiebres&data=' + data);
       const result = await res.json();
       if (result.ok) {
         document.querySelector('.card').innerHTML = '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><h2 style="color:#2D6A4F;margin-top:16px">Quiebres registrados!</h2><p style="color:#666;margin-top:8px">El equipo ya puede ver el menu actualizado.</p></div>';
