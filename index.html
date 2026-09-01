@@ -42,8 +42,11 @@
     .btn { width: 100%; padding: 14px; background: var(--naranja); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; margin-top: 20px; transition: background 0.15s; }
     .btn:hover { background: var(--naranja-hover); }
     .btn:disabled { background: #C9C6B8; cursor: not-allowed; }
-    .msg { padding: 14px; border-radius: 8px; margin-top: 16px; font-size: 14px; text-align: center; }
-    .msg.error { background: var(--bordo-bg); color: var(--bordo); }
+    .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(29,53,39,0.5); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+    .popup-box { background: #FFFFFF; border-radius: 12px; padding: 24px; max-width: 320px; width: 100%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .popup-box p { font-size: 14px; color: var(--verde); margin-bottom: 16px; line-height: 1.5; }
+    .popup-btn { background: var(--naranja); color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .popup-btn:hover { background: var(--naranja-hover); }
     .flex-badge { font-size: 10px; background: var(--verde); color: white; padding: 2px 8px; border-radius: 10px; margin-left: 8px; letter-spacing: 0.02em; }
     .loading { text-align: center; padding: 40px; color: var(--gris-texto); }
   </style>
@@ -60,7 +63,6 @@
     <input type="text" id="nombre" placeholder="Ej: Juan Perez" />
   </div>
   <div id="menu"><div class="loading">Cargando menu del dia...</div></div>
-  <div id="msg"></div>
   <button class="btn" id="btnEnviar" onclick="enviarPedido()" disabled>Confirmar pedido</button>
 </div>
 <script>
@@ -146,10 +148,10 @@
   }
 
   function mostrarMsg(texto) {
-    const msg = document.getElementById('msg');
-    msg.className = 'msg error';
-    msg.textContent = texto;
-    setTimeout(() => { msg.textContent = ''; msg.className = ''; }, 4000);
+    const overlay = document.createElement('div');
+    overlay.className = 'popup-overlay';
+    overlay.innerHTML = '<div class="popup-box"><p>' + texto + '</p><button class="popup-btn" onclick="this.closest(\'.popup-overlay\').remove()">Entendido</button></div>';
+    document.body.appendChild(overlay);
   }
 
   async function enviarPedido() {
